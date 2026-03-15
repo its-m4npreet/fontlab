@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
+  ArrowLeft,
   ArrowRight,
   BookOpen,
   Github,
@@ -16,6 +17,7 @@ import {
   Zap,
 } from "lucide-react";
 import { FontCard } from "@/components/FontCard";
+import { FontPairingSection } from "@/components/FontPairingSection";
 import { FontPlaygroundModal } from "@/components/FontPlaygroundModal";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { Button } from "@/components/ui/button";
@@ -23,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { fonts } from "@/data/fonts";
 
 const DEFAULT_TEXT = "The quick brown fox jumps over the lazy dog";
+const CARDS_PER_PAGE = 20;
 
 const MARQUEE_FONTS = [
   { name: "Inter",             family: "'Inter', sans-serif" },
@@ -50,6 +53,7 @@ const MARQUEE_FONTS = [
 export default function Home() {
   const [selectedFont, setSelectedFont] = useState(fonts[1]); // Poppins
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [modalFont, setModalFont] = useState<(typeof fonts)[0] | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -100,6 +104,19 @@ export default function Home() {
     });
   }, [searchQuery]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredFonts.length / CARDS_PER_PAGE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedFonts = useMemo(() => {
+    const startIndex = (safeCurrentPage - 1) * CARDS_PER_PAGE;
+    return filteredFonts.slice(startIndex, startIndex + CARDS_PER_PAGE);
+  }, [filteredFonts, safeCurrentPage]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
   const toggleTheme = () => {
     setTheme((previous) => (previous === "dark" ? "light" : "dark"));
   };
@@ -124,6 +141,7 @@ export default function Home() {
               </a>
               <nav className="hidden items-center gap-4 text-sm text-muted-foreground md:flex">
                 <a href="#library" className="transition-colors hover:text-foreground">Fonts</a>
+                <a href="#pairings" className="transition-colors hover:text-foreground">Pairings</a>
               </nav>
             </div>
 
@@ -132,7 +150,7 @@ export default function Home() {
                 <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
+                  onChange={(event) => handleSearchChange(event.target.value)}
                   placeholder="Search fonts..."
                   className="h-9 rounded-full border-zinc-300 bg-muted/70 pl-9 dark:border-input"
                 />
@@ -156,13 +174,13 @@ export default function Home() {
                 Open Source
               </span>
               <a
-                href="https://github.com"
+                href="https://github.com/its-m4npreet/fontlab"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition hover:bg-muted"
               >
                 <Github className="size-4" />
-                GitHub
+                <span className="hidden sm:inline">GitHub</span>
               </a>
             </div>
           </div>
@@ -206,7 +224,7 @@ export default function Home() {
           className="pointer-events-none absolute top-1/4 -right-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl"
         />
 
-        <div className="relative px-6 pb-14 pt-24 text-center md:px-16 md:pb-20 md:pt-28">
+        <div className="relative px-4 pb-12 pt-20 text-center sm:px-6 sm:pb-14 sm:pt-24 md:px-16 md:pb-20 md:pt-28">
           {/* badge */}
           <motion.span
             initial={{ opacity: 0, y: -8 }}
@@ -224,7 +242,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.45 }}
-            className="mx-auto max-w-4xl text-4xl font-bold leading-tight tracking-tight md:text-6xl"
+            className="mx-auto max-w-4xl text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-6xl"
             style={{ fontFamily: selectedFont.family }}
           >
             The{" "}
@@ -266,7 +284,7 @@ export default function Home() {
               Start Exploring <ArrowRight className="size-4" />
             </a>
             <a
-              href="https://github.com"
+              href="https://github.com/its-m4npreet/fontlab"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-lg border px-5 py-2.5 text-sm font-medium transition hover:bg-muted"
@@ -284,7 +302,7 @@ export default function Home() {
             style={{ fontFamily: selectedFont.family }}
           >
             {[
-              { icon: <Star className="size-3.5" />, label: "8 Google Fonts" },
+              { icon: <Star className="size-3.5" />, label: "150+ Fonts" },
               { icon: <Zap className="size-3.5" />, label: "Real-time Preview" },
               { icon: <BookOpen className="size-3.5" />, label: "HTML · CSS · Tailwind" },
               { icon: <Workflow className="size-3.5" />, label: "Font Pairing Tool" },
@@ -330,25 +348,30 @@ export default function Home() {
       <section id="library" className="space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Font Library</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold">Font Library</h2>
+              <span className="inline-flex items-center gap-1 rounded-full border bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                <Star className="size-3" /> 150+ Fonts
+              </span>
+            </div>
             <p className="text-xs text-muted-foreground">Select a font to preview and customise it below</p>
           </div>
           <div className="relative w-full sm:w-72 md:hidden">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
+              onChange={(event) => handleSearchChange(event.target.value)}
               placeholder="Search fonts..."
               className="h-9 rounded-full border-zinc-300 bg-muted/70 pl-9 dark:border-input"
             />
           </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {isLoading
-            ? Array.from({ length: 8 }, (_, index) => (
+            ? Array.from({ length: CARDS_PER_PAGE }, (_, index) => (
                 <SkeletonLoader key={index} className="h-44 w-full" />
               ))
-            : filteredFonts.map((font) => (
+            : paginatedFonts.map((font) => (
                 <FontCard
                   key={font.name}
                   font={font}
@@ -365,16 +388,51 @@ export default function Home() {
                 />
               ))}
         </div>
+        {!isLoading && filteredFonts.length > 0 ? (
+          <div className="flex items-center justify-center gap-3 py-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="px-4"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={safeCurrentPage === 1}
+            >
+              <ArrowLeft className="size-3.5" /> Previous
+            </Button>
+            <span className="min-w-20 text-center text-xs text-muted-foreground">
+              {safeCurrentPage} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="px-4"
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={safeCurrentPage === totalPages}
+            >
+              Next <ArrowRight className="size-3.5" />
+            </Button>
+          </div>
+        ) : null}
         {!isLoading && filteredFonts.length === 0 ? (
           <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
             No fonts matched your search. Try another keyword.
           </div>
         ) : null}
       </section>
+
+      <FontPairingSection
+        onApplyFont={(name) => {
+          const match = fonts.find((f) => f.name === name);
+          if (match) {
+            setSelectedFont(match);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        }}
+      />
       </motion.main>
 
       <footer className="border-t bg-background/80 backdrop-blur-sm">
-        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 text-xs text-muted-foreground sm:flex-row md:px-8">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-2 px-4 py-5 text-xs text-muted-foreground sm:flex-row sm:gap-3 md:px-8">
           <div className="flex items-center gap-2">
             <div className="rounded-md bg-primary/10 p-1 text-primary">
               <Type className="size-3.5" />
@@ -384,8 +442,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <a href="#library" className="transition-colors hover:text-foreground">Fonts</a>
-            <a href="#playground" className="transition-colors hover:text-foreground">Playground</a>
-            <a href="https://github.com" target="_blank" rel="noreferrer" className="transition-colors hover:text-foreground">GitHub</a>
+            <a href="https://github.com/its-m4npreet/fontlab" target="_blank" rel="noreferrer" className="transition-colors hover:text-foreground">GitHub</a>
           </div>
           <span>© {new Date().getFullYear()} FontLab. All rights reserved.</span>
         </div>

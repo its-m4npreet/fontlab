@@ -16,7 +16,7 @@ type CodeGeneratorProps = {
 
 function CodeBlock({ code }: { code: string }) {
   return (
-    <pre className="max-h-90 overflow-auto rounded-lg border bg-muted/40 p-4 text-xs leading-relaxed">
+    <pre className="max-h-52 overflow-auto rounded-lg border bg-muted/40 p-3 text-xs leading-relaxed sm:max-h-72 md:max-h-96">
       <code>{code}</code>
     </pre>
   );

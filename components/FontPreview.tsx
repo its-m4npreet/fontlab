@@ -38,12 +38,13 @@ export function FontPreview({
           onChange={(event) => onTextChange(event.target.value)}
           className="min-h-20"
         />
+        <div className="overflow-x-auto">
         <motion.div
           key={`${fontFamily}-${fontSize}-${fontWeight}-${letterSpacing}-${lineHeight}-${textColor}-${backgroundColor}`}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="rounded-xl border p-6 md:p-10"
+          className="min-w-0 rounded-xl border p-4 sm:p-6 md:p-10"
           style={{
             fontFamily,
             fontSize: `${fontSize}px`,
@@ -56,6 +57,7 @@ export function FontPreview({
         >
           {previewText}
         </motion.div>
+        </div>
       </CardContent>
     </Card>
   );
