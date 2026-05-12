@@ -16,6 +16,7 @@ import {
   Workflow,
   Zap,
 } from "lucide-react";
+import Link from "next/link";
 import { FontCard } from "@/components/FontCard";
 import { FontPairingSection } from "@/components/FontPairingSection";
 import { FontPlaygroundModal } from "@/components/FontPlaygroundModal";
@@ -23,72 +24,27 @@ import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fonts } from "@/data/fonts";
+import { useFontLoader } from "@/lib/useFontLoader";
+import { useTheme } from "@/components/ThemeProvider";
 
 const DEFAULT_TEXT = "The quick brown fox jumps over the lazy dog";
 const CARDS_PER_PAGE = 20;
 
-const MARQUEE_FONTS = [
-  { name: "Inter",             family: "'Inter', sans-serif" },
-  { name: "Playfair Display",  family: "'Playfair Display', serif" },
-  { name: "Poppins",           family: "'Poppins', sans-serif" },
-  { name: "JetBrains Mono",    family: "'JetBrains Mono', monospace" },
-  { name: "Merriweather",      family: "'Merriweather', serif" },
-  { name: "Raleway",           family: "'Raleway', sans-serif" },
-  { name: "Space Grotesk",     family: "'Space Grotesk', sans-serif" },
-  { name: "Dancing Script",    family: "'Dancing Script', cursive" },
-  { name: "Bebas Neue",        family: "'Bebas Neue', sans-serif" },
-  { name: "Fraunces",          family: "'Fraunces', serif" },
-  { name: "Pacifico",          family: "'Pacifico', cursive" },
-  { name: "Manrope",           family: "'Manrope', sans-serif" },
-  { name: "Bodoni Moda",       family: "'Bodoni Moda', serif" },
-  { name: "Orbitron",          family: "'Orbitron', sans-serif" },
-  { name: "Cinzel",            family: "'Cinzel', serif" },
-  { name: "Lobster",           family: "'Lobster', cursive" },
-  { name: "DM Sans",           family: "'DM Sans', sans-serif" },
-  { name: "Cormorant Garamond",family: "'Cormorant Garamond', serif" },
-  { name: "IBM Plex Mono",     family: "'IBM Plex Mono', monospace" },
-  { name: "Josefin Sans",      family: "'Josefin Sans', sans-serif" },
-];
+const MARQUEE_FONTS = fonts.slice(0, 20);
 
 export default function Home() {
-  const [selectedFont, setSelectedFont] = useState(fonts[1]); // Poppins
+  const { selectedFont, appliedFont, fontFading, loadAndApplyFont, loadAndApplyFontByName } = useFontLoader();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [modalFont, setModalFont] = useState<(typeof fonts)[0] | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window === "undefined") {
-      return "light";
-    }
-
-    const savedTheme = window.localStorage.getItem("theme");
-    return savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light";
-  });
+  const { toggleTheme } = useTheme();
 
   useEffect(() => {
     const timeout = setTimeout(() => setIsLoading(false), 900);
     return () => clearTimeout(timeout);
   }, []);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-    document.documentElement.style.colorScheme = theme;
-    window.localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  useEffect(() => {
-    const existing = document.getElementById("fontlab-dynamic-font");
-    if (existing) {
-      existing.remove();
-    }
-
-    const link = document.createElement("link");
-    link.id = "fontlab-dynamic-font";
-    link.rel = "stylesheet";
-    link.href = `https://fonts.googleapis.com/css2?family=${selectedFont.googleFamily}:wght@${selectedFont.weights.join(";")}&display=swap`;
-    document.head.appendChild(link);
-  }, [selectedFont]);
 
   const filteredFonts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -117,10 +73,6 @@ export default function Home() {
     setCurrentPage(1);
   };
 
-  const toggleTheme = () => {
-    setTheme((previous) => (previous === "dark" ? "light" : "dark"));
-  };
-
   return (
     <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.08),transparent_38%),linear-gradient(to_bottom,transparent,rgba(15,23,42,0.04))]">
       <motion.main
@@ -140,8 +92,8 @@ export default function Home() {
                 FontLab
               </a>
               <nav className="hidden items-center gap-4 text-sm text-muted-foreground md:flex">
-                <a href="#library" className="transition-colors hover:text-foreground">Fonts</a>
-                <a href="#pairings" className="transition-colors hover:text-foreground">Pairings</a>
+                <button onClick={() => document.getElementById("library")?.scrollIntoView({ behavior: "smooth" })} className="cursor-pointer transition-colors hover:text-foreground">Fonts</button>
+                <Link href="/pairings" className="transition-colors hover:text-foreground">Pairings</Link>
               </nav>
             </div>
 
@@ -224,14 +176,17 @@ export default function Home() {
           className="pointer-events-none absolute top-1/4 -right-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl"
         />
 
-        <div className="relative px-4 pb-12 pt-20 text-center sm:px-6 sm:pb-14 sm:pt-24 md:px-16 md:pb-20 md:pt-28">
+        <div
+          className="relative px-4 pb-12 pt-20 text-center sm:px-6 sm:pb-14 sm:pt-24 md:px-16 md:pb-20 md:pt-28"
+          style={{ opacity: fontFading ? 0.4 : 1, transition: "opacity 0.25s ease" }}
+        >
           {/* badge */}
           <motion.span
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
             className="mb-5 inline-flex items-center gap-1.5 rounded-full border bg-muted/60 px-3 py-1 text-xs font-medium text-muted-foreground"
-            style={{ fontFamily: selectedFont.family }}
+            style={{ fontFamily: appliedFont.family }}
           >
             <Zap className="size-3 text-primary" />
             Open Source · Free Forever · MIT License
@@ -239,11 +194,11 @@ export default function Home() {
 
           {/* headline */}
           <motion.h1
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.45 }}
+            transition={{ duration: 0.35 }}
             className="mx-auto max-w-4xl text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-6xl"
-            style={{ fontFamily: selectedFont.family }}
+            style={{ fontFamily: appliedFont.family }}
           >
             The{" "}
             <span className="bg-linear-to-r from-foreground via-zinc-500 to-muted-foreground bg-clip-text text-transparent">
@@ -256,11 +211,11 @@ export default function Home() {
 
           {/* sub-headline */}
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.18, duration: 0.45 }}
+            transition={{ duration: 0.35 }}
             className="mx-auto mt-5 max-w-xl text-base text-muted-foreground md:text-lg"
-            style={{ fontFamily: selectedFont.family }}
+            style={{ fontFamily: appliedFont.family }}
           >
             Browse Google Fonts, tweak size, weight, spacing and colour live,
             then copy production-ready&nbsp;
@@ -275,7 +230,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.26 }}
             className="mt-8 flex flex-wrap items-center justify-center gap-3"
-            style={{ fontFamily: selectedFont.family }}
+            style={{ fontFamily: appliedFont.family }}
           >
             <a
               href="#library"
@@ -299,7 +254,7 @@ export default function Home() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.38 }}
             className="mt-10 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground"
-            style={{ fontFamily: selectedFont.family }}
+            style={{ fontFamily: appliedFont.family }}
           >
             {[
               { icon: <Star className="size-3.5" />, label: "150+ Fonts" },
@@ -327,16 +282,17 @@ export default function Home() {
             <div className="hero-font-marquee">
               <div className="hero-font-marquee-track">
                 {[...MARQUEE_FONTS, ...MARQUEE_FONTS].map((font, index) => (
-                  <span
+                  <button
                     key={`${font.name}-${index}`}
-                    className="inline-flex items-center px-4 py-2 text-sm font-semibold text-muted-foreground/80 transition-colors hover:text-foreground"
+                    onClick={() => loadAndApplyFont(font)}
+                    className="cursor-pointer inline-flex items-center px-4 py-2 text-sm font-semibold text-muted-foreground/80 transition-colors hover:text-foreground"
                     style={{
                       fontFamily: font.family,
                       fontSize: `${1 + (index % 4) * 0.12}rem`,
                     }}
                   >
                     {font.name}
-                  </span>
+                  </button>
                 ))}
               </div>
             </div>
@@ -382,7 +338,7 @@ export default function Home() {
                     setModalOpen(true);
                   }}
                   onApply={() => {
-                    setSelectedFont(font);
+                    loadAndApplyFont(font);
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                 />
@@ -422,11 +378,8 @@ export default function Home() {
 
       <FontPairingSection
         onApplyFont={(name) => {
-          const match = fonts.find((f) => f.name === name);
-          if (match) {
-            setSelectedFont(match);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }
+          loadAndApplyFontByName(name);
+          window.scrollTo({ top: 0, behavior: "smooth" });
         }}
       />
       </motion.main>
@@ -441,7 +394,7 @@ export default function Home() {
             <span>· Open Source · MIT License</span>
           </div>
           <div className="flex items-center gap-4">
-            <a href="#library" className="transition-colors hover:text-foreground">Fonts</a>
+            <Link href="/pairings" className="transition-colors hover:text-foreground">Pairings</Link>
             <a href="https://github.com/its-m4npreet/fontlab" target="_blank" rel="noreferrer" className="transition-colors hover:text-foreground">GitHub</a>
           </div>
           <span>© {new Date().getFullYear()} FontLab. All rights reserved.</span>
@@ -454,9 +407,7 @@ export default function Home() {
         isSelected={modalFont?.name === selectedFont.name}
         onClose={() => setModalOpen(false)}
         onApply={() => {
-          if (modalFont) {
-            setSelectedFont(modalFont);
-          }
+          if (modalFont) loadAndApplyFont(modalFont);
         }}
       />
     </div>
